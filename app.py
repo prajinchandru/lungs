@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 from PIL import Image
 
-st.set_page_config(page_title="AI Lung Health Assistant", layout="wide")
+st.set_page_config(page_title="AI Lung Detection", layout="wide")
 
 st.title("🫁 Lung Disease Detection System")
 
@@ -19,13 +19,13 @@ if file:
     img = np.array(img)/255.0
     img = np.expand_dims(img,0)
 
-    # Replace with your real model prediction
+    # Example prediction (replace with your real model)
     prediction = np.random.rand(3)
 
     index = prediction.argmax()
     disease = classes[index]
 
-    st.subheader("🧠 AI Diagnosis")
+    st.subheader("🧠 AI Result")
 
     if disease == "Normal":
 
@@ -35,27 +35,64 @@ if file:
 
         st.error(f"Disease detected: {disease}")
 
-        st.write("⚕ Please consult a pulmonologist immediately.")
+        st.write("⚕ Please consult a pulmonologist.")
 
-        st.subheader("📍 Finding Hospitals Near You")
+        st.subheader("📍 Nearby Hospitals")
 
-        st.info("Click the button to detect your live location and open nearby hospitals.")
+        # JavaScript to get location and display Google Map
+        st.components.v1.html("""
+        <div id="map" style="width:100%;height:500px;"></div>
 
-        if st.button("Find Hospitals Near Me"):
+        <script>
 
-            st.markdown("""
-            <script>
-            navigator.geolocation.getCurrentPosition(function(position) {
+        function initMap(lat, lon) {
 
-                var lat = position.coords.latitude;
-                var lon = position.coords.longitude;
+            var location = {lat: lat, lng: lon};
 
-                var maps_url =
-                "https://www.google.com/maps/search/hospitals/@"
-                + lat + "," + lon + ",14z";
+            var map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 14,
+                center: location
+            });
 
-                window.open(maps_url);
+            var request = {
+                location: location,
+                radius: '5000',
+                type: ['hospital']
+            };
+
+            var service = new google.maps.places.PlacesService(map);
+
+            service.nearbySearch(request, function(results, status) {
+
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+
+                    for (var i = 0; i < results.length; i++) {
+
+                        new google.maps.Marker({
+                            position: results[i].geometry.location,
+                            map: map
+                        });
+
+                    }
+
+                }
 
             });
-            </script>
-            """, unsafe_allow_html=True)
+
+        }
+
+        navigator.geolocation.getCurrentPosition(function(position) {
+
+            var lat = position.coords.latitude;
+            var lon = position.coords.longitude;
+
+            var script = document.createElement('script');
+            script.src = "https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initMap.bind(null,"+lat+","+lon+")";
+            script.async = true;
+
+            document.head.appendChild(script);
+
+        });
+
+        </script>
+        """, height=520)
