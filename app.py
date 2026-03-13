@@ -5,73 +5,31 @@ from PIL import Image
 import gdown
 import os
 
-st.set_page_config(page_title="Lung Detection AI", layout="centered")
+MODEL_ID = "1yL5KwOn8RTHq5ANhK6qSf_93ccxyGQeY"
+MODEL_PATH = "model.h5"
 
-# -----------------------------
-# Download model from Google Drive
-# -----------------------------
+if not os.path.exists(MODEL_PATH):
+    url = f"https://drive.google.com/uc?id={MODEL_ID}"
+    gdown.download(url, MODEL_PATH, quiet=False)
 
-file_id = "1yL5KwOn8RTHq5ANhK6qSf_93ccxyGQeY"
-model_path = "model.h5"
+model = tf.keras.models.load_model(MODEL_PATH)
 
-if not os.path.exists(model_path):
-    st.info("Downloading AI model from Google Drive...")
-    url = f"https://drive.google.com/uc?id={file_id}"
-    gdown.download(url, model_path, quiet=False)
+st.title("Lung Disease Detection")
 
-# -----------------------------
-# Load AI Model
-# -----------------------------
+file = st.file_uploader("Upload X-ray Image", type=["jpg", "jpeg", "png"])
 
-@st.cache_resource
-def load_model():
-    model = tf.keras.models.load_model(model_path)
-    return model
+if file is not None:
+    img = Image.open(file).convert("RGB")
+    st.image(img, use_column_width=True)
 
-model = load_model()
-
-# -----------------------------
-# Streamlit UI
-# -----------------------------
-
-st.title("🫁 Lung Disease Detection AI")
-st.write("Upload a Chest X-Ray image to analyze lung condition.")
-
-uploaded_file = st.file_uploader(
-    "Upload X-ray Image",
-    type=["jpg", "png", "jpeg"]
-)
-
-# -----------------------------
-# Image Processing
-# -----------------------------
-
-if uploaded_file is not None:
-
-    image = Image.open(uploaded_file)
-
-    st.image(image, caption="Uploaded Image", use_column_width=True)
-
-    img = image.resize((224,224))
-    img = np.array(img)/255.0
+    img = img.resize((224, 224))
+    img = np.array(img) / 255.0
     img = np.expand_dims(img, axis=0)
 
     if st.button("Predict"):
+        pred = model.predict(img)
 
-        prediction = model.predict(img)
-
-        confidence = float(prediction[0])
-
-        st.subheader("Prediction Result")
-
-        if confidence > 0.5:
-            st.error(f"Pneumonia Detected ⚠️ (Confidence: {confidence:.2f})")
+        if pred[0] > 0.5:
+            st.error("Pneumonia Detected")
         else:
-            st.success(f"Normal Lung ✅ (Confidence: {1-confidence:.2f})")
-
-# -----------------------------
-# Footer
-# -----------------------------
-
-st.markdown("---")
-st.write("AI Powered Lung X-ray Detection")
+            st.success("Normal Lung")
