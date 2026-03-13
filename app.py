@@ -5,11 +5,11 @@ from PIL import Image
 import gdown
 import os
 
-FILE_ID = "1yL5KwOn8RTHq5ANhK6qSf_93ccxyGQeY"
+MODEL_ID = "1yL5KwOn8RTHq5ANhK6qSf_93ccxyGQeY"
 MODEL_PATH = "model.h5"
 
 if not os.path.exists(MODEL_PATH):
-    url = f"https://drive.google.com/uc?id={FILE_ID}"
+    url = f"https://drive.google.com/uc?id={MODEL_ID}"
     gdown.download(url, MODEL_PATH, quiet=False)
 
 model = tf.keras.models.load_model(MODEL_PATH)
