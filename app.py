@@ -1,58 +1,55 @@
 import streamlit as st
 import os
 
-# Set page config first
+# Set page config
 st.set_page_config(page_title="Lung Disease Classifier", page_icon="🫁")
 
-# Try-except block to help debug installation issues in the UI
+# Defensive imports to catch errors in the UI
 try:
     import tensorflow as tf
     import numpy as np
     from PIL import Image
     import gdown
 except ImportError as e:
-    st.error(f"Installation Error: {e}. Check your requirements.txt")
+    st.error(f"Module loading failed: {e}. Please wait for the installer to finish.")
     st.stop()
 
-# 1. Download/Load Model
+# --- Model Loading ---
 @st.cache_resource
-def load_model():
+def load_classifier():
+    model_path = 'lungs_disease_classifier.h5'
     file_id = '1yL5KwOn8RTHq5ANhK6qSf_93ccxyGQeY'
     url = f'https://drive.google.com/uc?id={file_id}'
-    output = 'lungs_disease_classifier.h5'
     
-    if not os.path.exists(output):
-        with st.spinner("Downloading model from Google Drive..."):
-            gdown.download(url, output, quiet=False)
+    # If the file isn't in the GitHub repo, download it
+    if not os.path.exists(model_path):
+        with st.spinner("Fetching model..."):
+            gdown.download(url, model_path, quiet=False)
             
-    return tf.keras.models.load_model(output)
+    return tf.keras.models.load_model(model_path)
 
-model = load_model()
-
-# 2. Define Classes (Match your model's training labels)
+model = load_classifier()
 CLASS_NAMES = ['COVID-19', 'Normal', 'Pneumonia']
 
-# 3. UI logic
-st.title("🫁 Lung Disease Classifier")
-st.write("Upload a chest X-ray image for instant classification.")
+# --- UI ---
+st.title("🫁 Lung Disease Classification")
+st.info("Upload a chest X-ray image for an automated AI diagnostic prediction.")
 
-uploaded_file = st.file_uploader("Upload Image...", type=["jpg", "jpeg", "png"])
+file = st.file_uploader("Upload X-Ray (JPG/PNG)", type=["jpg", "jpeg", "png"])
 
-if uploaded_file is not None:
-    image = Image.open(uploaded_file).convert('RGB')
-    st.image(image, caption='Uploaded X-ray', use_container_width=True)
+if file:
+    img = Image.open(file).convert('RGB')
+    st.image(img, caption="Target Image", use_container_width=True)
     
-    # Preprocessing to 150x150
-    img = image.resize((150, 150))
-    img_array = tf.keras.preprocessing.image.img_to_array(img)
-    img_array = np.expand_dims(img_array, axis=0)
-    img_array = img_array / 255.0
+    # Match your model's 150x150 input requirement
+    resized_img = img.resize((150, 150))
+    img_array = tf.keras.preprocessing.image.img_to_array(resized_img)
+    img_array = np.expand_dims(img_array, axis=0) / 255.0
 
-    if st.button('Predict'):
-        with st.spinner('Analyzing...'):
-            prediction = model.predict(img_array)
-            result = CLASS_NAMES[np.argmax(prediction[0])]
-            confidence = np.max(prediction[0]) * 100
-            
-            st.success(f"Prediction: {result}")
-            st.info(f"Confidence: {confidence:.2f}%")
+    if st.button("Run Prediction"):
+        prediction = model.predict(img_array)
+        top_idx = np.argmax(prediction[0])
+        confidence = np.max(prediction[0]) * 100
+        
+        st.subheader(f"Result: {CLASS_NAMES[top_idx]}")
+        st.write(f"Confidence Level: {confidence:.2f}%")
