@@ -1,37 +1,17 @@
 import streamlit as st
 import numpy as np
 from PIL import Image
-import gdown
-import os
-from ai_edge_litert.interpreter import Interpreter
+import requests
+import base64
 
 st.set_page_config(page_title="Lung Disease Detection AI", page_icon="🫁")
 
-FILE_ID = "1seN9vA_582rjB06bCwRSaianans9oM6g"
-MODEL_PATH = "lungs_disease_classifier.tflite"
-
-# Download model
-if not os.path.exists(MODEL_PATH):
-    url = f"https://drive.google.com/uc?id={FILE_ID}"
-    gdown.download(url, MODEL_PATH, quiet=False)
-
-# Load interpreter
-interpreter = Interpreter(model_path=MODEL_PATH)
-interpreter.allocate_tensors()
-
-input_details = interpreter.get_input_details()
-output_details = interpreter.get_output_details()
-
-classes = [
-    "Normal",
-    "Pneumonia",
-    "Other Lung Disease"
-]
-
 st.title("🫁 Lung Disease Detection AI")
-st.write("Upload a chest X-ray image to analyze lung condition")
+st.write("Upload a chest X-ray image")
 
-file = st.file_uploader("Upload X-ray", type=["jpg", "jpeg", "png"])
+file = st.file_uploader("Upload X-ray", type=["jpg","jpeg","png"])
+
+classes = ["Normal", "Pneumonia", "Other Lung Disease"]
 
 if file:
 
@@ -39,18 +19,22 @@ if file:
     st.image(image, caption="Uploaded X-ray")
 
     img = image.resize((150,150))
-    img = np.array(img) / 255.0
-    img = np.expand_dims(img,0).astype(np.float32)
+    img = np.array(img)/255.0
 
     if st.button("Analyze"):
 
-        interpreter.set_tensor(input_details[0]["index"], img)
-        interpreter.invoke()
+        # encode image
+        img_bytes = base64.b64encode(img.tobytes()).decode()
 
-        pred = interpreter.get_tensor(output_details[0]["index"])
+        response = requests.post(
+            "https://lungs-ai-api.onrender.com/predict",
+            json={"image": img_bytes}
+        )
 
-        index = int(np.argmax(pred))
-        confidence = float(pred[0][index])
+        result = response.json()
 
-        st.success(f"Prediction: {classes[index]}")
+        prediction = result["class"]
+        confidence = result["confidence"]
+
+        st.success(f"Prediction: {classes[prediction]}")
         st.write(f"Confidence: {confidence:.2f}")
