@@ -3,18 +3,18 @@ import numpy as np
 from PIL import Image
 import gdown
 import os
-import tensorflow as tf
+import tflite_runtime.interpreter as tflite
 
 st.set_page_config(page_title="Lung Disease Detection AI", page_icon="🫁")
 
 FILE_ID = "1seN9vA_582rjB06bCwRSaianans9oM6g"
-MODEL_PATH = "model.tflite"
+MODEL_PATH = "lungs_disease_classifier.tflite"
 
 if not os.path.exists(MODEL_PATH):
     url = f"https://drive.google.com/uc?id={FILE_ID}"
     gdown.download(url, MODEL_PATH, quiet=False)
 
-interpreter = tf.lite.Interpreter(model_path=MODEL_PATH)
+interpreter = tflite.Interpreter(model_path=MODEL_PATH)
 interpreter.allocate_tensors()
 
 input_details = interpreter.get_input_details()
@@ -27,7 +27,7 @@ st.write("Upload a chest X-ray image")
 
 file = st.file_uploader("Upload X-ray", type=["jpg","jpeg","png"])
 
-if file is not None:
+if file:
 
     image = Image.open(file).convert("RGB")
     st.image(image, caption="Uploaded X-ray")
