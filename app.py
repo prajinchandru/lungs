@@ -8,7 +8,6 @@ st.title("🫁 Lung Disease Detection & Medical Assistant")
 
 classes = ["Normal", "Pneumonia", "Other Lung Disease"]
 
-# Upload X-ray
 file = st.file_uploader("Upload Chest X-ray", type=["jpg","jpeg","png"])
 
 if file:
@@ -20,7 +19,7 @@ if file:
     img = np.array(img)/255.0
     img = np.expand_dims(img,0)
 
-    # Example prediction (replace with your model)
+    # Example prediction (replace with real model)
     prediction = np.random.rand(3)
 
     index = prediction.argmax()
@@ -36,65 +35,50 @@ if file:
 
         st.error(f"Disease detected: {disease}")
 
-        st.subheader("⚕ Medical Help Recommendation")
+        st.subheader("⚕ Recommended Medical Help")
 
-        st.write("""
-        We recommend consulting a **lung specialist (Pulmonologist)** immediately.
-        """)
+        st.write("Consult a **Pulmonologist (lung specialist)** immediately.")
 
-        # -----------------------------
-        # Get live location
-        # -----------------------------
+        st.subheader("📍 Find Nearby Hospitals")
 
-        st.markdown("### 📍 Find Nearby Hospitals")
+        st.markdown("""
+        <script>
+        navigator.geolocation.getCurrentPosition(function(position) {
 
-        api_key = st.text_input("Enter Google Maps API Key", type="password")
+            var lat = position.coords.latitude;
+            var lon = position.coords.longitude;
 
-        if api_key:
+            var map_url = "https://www.google.com/maps?q=hospitals&near=" + lat + "," + lon;
 
-            st.markdown(
-            f"""
+            window.open(map_url);
+
+        });
+        </script>
+        """, unsafe_allow_html=True)
+
+        st.info("Click the button below to find nearby hospitals.")
+
+        if st.button("Find Hospitals Near Me"):
+
+            st.markdown("""
             <script>
-            navigator.geolocation.getCurrentPosition(
-            (position) => {{
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
+            navigator.geolocation.getCurrentPosition(function(position) {
 
-                const map = document.getElementById("mapframe");
+                var lat = position.coords.latitude;
+                var lon = position.coords.longitude;
 
-                map.src =
-                "https://www.google.com/maps/embed/v1/search?key={api_key}&q=hospitals&center=" + lat + "," + lon + "&zoom=13";
-            }});
+                var map_url = "https://www.google.com/maps?q=hospitals&near=" + lat + "," + lon;
+
+                window.open(map_url);
+
+            });
             </script>
-            """,
-            unsafe_allow_html=True
-            )
-
-            st.components.v1.html(
-            """
-            <iframe
-            id="mapframe"
-            width="100%"
-            height="600"
-            style="border:0"
-            loading="lazy">
-            </iframe>
-            """,
-            height=600
-            )
-
-        else:
-
-            st.warning("Enter Google Maps API key to show hospitals.")
-
-        # -----------------------------
-        # Doctor suggestions
-        # -----------------------------
+            """, unsafe_allow_html=True)
 
         st.subheader("👨‍⚕ Suggested Doctors")
 
         st.write("""
-        **Pulmonologist Specialists**
+        **Pulmonology Specialists**
 
         • Apollo Hospitals  
         https://www.apollohospitals.com/
