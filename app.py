@@ -19,9 +19,8 @@ if file:
     img = np.array(img)/255.0
     img = np.expand_dims(img,0)
 
-    # Example prediction (replace with your real model)
+    # Example AI prediction
     prediction = np.random.rand(3)
-
     index = prediction.argmax()
     disease = classes[index]
 
@@ -34,29 +33,74 @@ if file:
     else:
 
         st.error(f"Disease detected: {disease}")
+        st.write("⚕ Please consult a **Pulmonologist** immediately.")
 
-        st.write("⚕ Please consult a pulmonologist.")
-
-        st.subheader("📍 Nearby Hospitals")
+        st.subheader("📍 Nearby Lung Specialists")
 
         st.components.v1.html("""
+        <div id="results"></div>
+
         <script>
-        navigator.geolocation.getCurrentPosition(function(position) {
+
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2-lat1) * Math.PI/180;
+            const dLon = (lon2-lon1) * Math.PI/180;
+
+            const a =
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1*Math.PI/180) *
+                Math.cos(lat2*Math.PI/180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        navigator.geolocation.getCurrentPosition(function(position){
 
             var lat = position.coords.latitude;
             var lon = position.coords.longitude;
 
-            var iframe = document.createElement("iframe");
+            var service = new google.maps.places.PlacesService(document.createElement('div'));
 
-            iframe.width="100%";
-            iframe.height="600";
-            iframe.style.border="0";
+            service.nearbySearch({
+                location: {lat: lat, lng: lon},
+                radius: 5000,
+                keyword: "pulmonologist hospital"
+            }, function(results, status){
 
-            iframe.src="https://www.google.com/maps?q=hospitals&near="
-            +lat+","+lon+"&output=embed";
+                if(status === google.maps.places.PlacesServiceStatus.OK){
 
-            document.body.appendChild(iframe);
+                    var html = "";
+
+                    for(var i=0;i<results.length;i++){
+
+                        var place = results[i];
+
+                        var dist = getDistance(
+                            lat,
+                            lon,
+                            place.geometry.location.lat(),
+                            place.geometry.location.lng()
+                        ).toFixed(2);
+
+                        html += "<b>"+place.name+"</b><br>";
+                        html += "⭐ Rating: "+place.rating+"<br>";
+                        html += "📍 Distance: "+dist+" km<br><br>";
+
+                    }
+
+                    document.getElementById("results").innerHTML = html;
+
+                }
+
+            });
 
         });
+
         </script>
-        """, height=600)
+
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCbxuqZwVoUx7ItP-HsPY-bXvk8V3Q7ZGE&libraries=places"></script>
+
+        """, height=500)
