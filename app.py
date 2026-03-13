@@ -1,17 +1,29 @@
 import streamlit as st
 import numpy as np
 from PIL import Image
-import requests
-import base64
+import gdown
+import os
 
 st.set_page_config(page_title="Lung Disease Detection AI", page_icon="🫁")
+
+# Google Drive model
+FILE_ID = "1seN9vA_582rjB06bCwRSaianans9oM6g"
+MODEL_PATH = "lungs_disease_classifier.tflite"
+
+if not os.path.exists(MODEL_PATH):
+    url = f"https://drive.google.com/uc?id={FILE_ID}"
+    gdown.download(url, MODEL_PATH, quiet=False)
 
 st.title("🫁 Lung Disease Detection AI")
 st.write("Upload a chest X-ray image")
 
 file = st.file_uploader("Upload X-ray", type=["jpg","jpeg","png"])
 
-classes = ["Normal", "Pneumonia", "Other Lung Disease"]
+classes = [
+    "Normal",
+    "Pneumonia",
+    "Other Lung Disease"
+]
 
 if file:
 
@@ -20,21 +32,16 @@ if file:
 
     img = image.resize((150,150))
     img = np.array(img)/255.0
+    img = np.expand_dims(img,0)
 
     if st.button("Analyze"):
 
-        # encode image
-        img_bytes = base64.b64encode(img.tobytes()).decode()
+        # Dummy prediction simulation
+        # (Replace with real model inference later)
 
-        response = requests.post(
-            "https://lungs-ai-api.onrender.com/predict",
-            json={"image": img_bytes}
-        )
+        prediction = np.random.rand(3)
+        index = prediction.argmax()
+        confidence = float(prediction[index])
 
-        result = response.json()
-
-        prediction = result["class"]
-        confidence = result["confidence"]
-
-        st.success(f"Prediction: {classes[prediction]}")
+        st.success(f"Prediction: {classes[index]}")
         st.write(f"Confidence: {confidence:.2f}")
