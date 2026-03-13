@@ -1,22 +1,22 @@
 import streamlit as st
+import tensorflow as tf
 import numpy as np
 from PIL import Image
 import gdown
 import os
-from keras.models import load_model
 
-MODEL_ID = "1yL5KwOn8RTHq5ANhK6qSf_93ccxyGQeY"
+FILE_ID = "1yL5KwOn8RTHq5ANhK6qSf_93ccxyGQeY"
 MODEL_PATH = "model.h5"
 
 if not os.path.exists(MODEL_PATH):
-    url = f"https://drive.google.com/uc?id={MODEL_ID}"
+    url = f"https://drive.google.com/uc?id={FILE_ID}"
     gdown.download(url, MODEL_PATH, quiet=False)
 
-model = load_model(MODEL_PATH)
+model = tf.keras.models.load_model(MODEL_PATH)
 
 st.title("Lung Disease Detection")
 
-file = st.file_uploader("Upload X-ray Image", type=["jpg","png","jpeg"])
+file = st.file_uploader("Upload X-ray Image", type=["jpg","jpeg","png"])
 
 if file is not None:
     img = Image.open(file).convert("RGB")
@@ -27,9 +27,9 @@ if file is not None:
     img = np.expand_dims(img,axis=0)
 
     if st.button("Predict"):
-        pred = model.predict(img)
+        prediction = model.predict(img)
 
-        if pred[0] > 0.5:
+        if prediction[0] > 0.5:
             st.error("Pneumonia Detected")
         else:
             st.success("Normal Lung")
