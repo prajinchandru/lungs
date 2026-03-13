@@ -35,64 +35,28 @@ if file:
 
         st.error(f"Disease detected: {disease}")
 
-        st.write("⚕ Please consult a pulmonologist immediately.")
+        st.write("⚕ Please consult a pulmonologist.")
 
         st.subheader("📍 Nearby Hospitals")
 
         st.components.v1.html("""
-        <div id="map" style="width:100%;height:500px;"></div>
-
         <script>
-
-        function initMap(lat, lon) {
-
-            var location = {lat: lat, lng: lon};
-
-            var map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 14,
-                center: location
-            });
-
-            var request = {
-                location: location,
-                radius: '5000',
-                type: ['hospital']
-            };
-
-            var service = new google.maps.places.PlacesService(map);
-
-            service.nearbySearch(request, function(results, status) {
-
-                if (status === google.maps.places.PlacesServiceStatus.OK) {
-
-                    for (var i = 0; i < results.length; i++) {
-
-                        new google.maps.Marker({
-                            position: results[i].geometry.location,
-                            map: map,
-                            title: results[i].name
-                        });
-
-                    }
-
-                }
-
-            });
-
-        }
-
         navigator.geolocation.getCurrentPosition(function(position) {
 
             var lat = position.coords.latitude;
             var lon = position.coords.longitude;
 
-            var script = document.createElement('script');
-            script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyCbxuqZwVoUx7ItP-HsPY-bXvk8V3Q7ZGE&libraries=places&callback=initMap.bind(null,"+lat+","+lon+")";
-            script.async = true;
+            var iframe = document.createElement("iframe");
 
-            document.head.appendChild(script);
+            iframe.width="100%";
+            iframe.height="600";
+            iframe.style.border="0";
+
+            iframe.src="https://www.google.com/maps?q=hospitals&near="
+            +lat+","+lon+"&output=embed";
+
+            document.body.appendChild(iframe);
 
         });
-
         </script>
-        """, height=520)
+        """, height=600)
