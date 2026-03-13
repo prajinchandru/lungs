@@ -1,41 +1,91 @@
 import streamlit as st
+import tensorflow as tf
 import numpy as np
 from PIL import Image
 import gdown
 import os
-import tflite_runtime.interpreter as tflite
 
-FILE_ID = "YOUR_DRIVE_ID"
-MODEL_PATH = "model.tflite"
+# -------------------------
+# PAGE SETTINGS
+# -------------------------
+st.set_page_config(
+    page_title="Lung Disease AI",
+    page_icon="🫁",
+    layout="centered"
+)
+
+# -------------------------
+# MODEL DOWNLOAD
+# -------------------------
+FILE_ID = "1yL5KwOn8RTHq5ANhK6qSf_93ccxyGQeY"
+MODEL_PATH = "model.h5"
 
 if not os.path.exists(MODEL_PATH):
     url = f"https://drive.google.com/uc?id={FILE_ID}"
     gdown.download(url, MODEL_PATH, quiet=False)
 
-interpreter = tflite.Interpreter(model_path=MODEL_PATH)
-interpreter.allocate_tensors()
+# -------------------------
+# LOAD MODEL
+# -------------------------
+@st.cache_resource
+def load_model():
+    return tf.keras.models.load_model(MODEL_PATH)
 
-input_details = interpreter.get_input_details()
-output_details = interpreter.get_output_details()
+model = load_model()
 
-st.title("Lung Disease Detection")
+# -------------------------
+# UI HEADER
+# -------------------------
+st.title("🫁 Lung Disease Detection AI")
+st.write("Upload a Chest X-ray image to analyze lung condition.")
 
-file = st.file_uploader("Upload X-ray", type=["jpg","png","jpeg"])
+# -------------------------
+# FILE UPLOAD
+# -------------------------
+file = st.file_uploader(
+    "Upload X-ray Image",
+    type=["jpg", "jpeg", "png"]
+)
 
-if file:
-    img = Image.open(file).convert("RGB")
-    st.image(img)
+# -------------------------
+# CLASS NAMES
+# -------------------------
+classes = [
+    "Normal",
+    "Pneumonia",
+    "Other Lung Disease"
+]
 
-    img = img.resize((224,224))
+# -------------------------
+# PREDICTION
+# -------------------------
+if file is not None:
+
+    image = Image.open(file).convert("RGB")
+
+    st.image(image, caption="Uploaded X-ray", use_column_width=True)
+
+    img = image.resize((150,150))
     img = np.array(img)/255.0
-    img = np.expand_dims(img,axis=0).astype(np.float32)
+    img = np.expand_dims(img,axis=0)
 
-    interpreter.set_tensor(input_details[0]['index'], img)
-    interpreter.invoke()
+    if st.button("Analyze X-ray"):
 
-    pred = interpreter.get_tensor(output_details[0]['index'])
+        prediction = model.predict(img)
 
-    if pred[0] > 0.5:
-        st.error("Pneumonia Detected")
-    else:
-        st.success("Normal Lung")
+        class_index = np.argmax(prediction)
+
+        confidence = float(prediction[0][class_index])
+
+        st.subheader("Prediction Result")
+
+        st.success(
+            f"Prediction: {classes[class_index]}"
+        )
+
+        st.write(
+            f"Confidence: {confidence:.2f}"
+        )
+
+st.markdown("---")
+st.caption("AI Medical Assistant – Lung X-ray Analysis")
