@@ -2,9 +2,9 @@ import streamlit as st
 import numpy as np
 from PIL import Image
 
-st.set_page_config(page_title="AI Lung Detection", layout="wide")
+st.set_page_config(page_title="AI Lung Health Assistant", layout="wide")
 
-st.title("🫁 Lung Disease Detection System")
+st.title("🫁 Lung Disease Detection & Medical Assistance")
 
 classes = ["Normal", "Pneumonia", "Other Lung Disease"]
 
@@ -25,7 +25,7 @@ if file:
     index = prediction.argmax()
     disease = classes[index]
 
-    st.subheader("🧠 AI Result")
+    st.subheader("🧠 AI Diagnosis")
 
     if disease == "Normal":
 
@@ -35,11 +35,10 @@ if file:
 
         st.error(f"Disease detected: {disease}")
 
-        st.write("⚕ Please consult a pulmonologist.")
+        st.write("⚕ Please consult a pulmonologist immediately.")
 
         st.subheader("📍 Nearby Hospitals")
 
-        # JavaScript to get location and display Google Map
         st.components.v1.html("""
         <div id="map" style="width:100%;height:500px;"></div>
 
@@ -70,7 +69,8 @@ if file:
 
                         new google.maps.Marker({
                             position: results[i].geometry.location,
-                            map: map
+                            map: map,
+                            title: results[i].name
                         });
 
                     }
@@ -87,7 +87,7 @@ if file:
             var lon = position.coords.longitude;
 
             var script = document.createElement('script');
-            script.src = "https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initMap.bind(null,"+lat+","+lon+")";
+            script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyCbxuqZwVoUx7ItP-HsPY-bXvk8V3Q7ZGE&libraries=places&callback=initMap.bind(null,"+lat+","+lon+")";
             script.async = true;
 
             document.head.appendChild(script);
