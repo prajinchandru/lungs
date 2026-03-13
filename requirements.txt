@@ -1,7 +1,5 @@
 streamlit
-keras
 numpy
 pillow
 gdown
-h5py
-tf-keras
+tflite-runtime
