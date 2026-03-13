@@ -4,7 +4,7 @@ from PIL import Image
 
 st.set_page_config(page_title="AI Lung Health Assistant", layout="wide")
 
-st.title("🫁 Lung Disease Detection & Medical Assistant")
+st.title("🫁 Lung Disease Detection System")
 
 classes = ["Normal", "Pneumonia", "Other Lung Disease"]
 
@@ -19,44 +19,27 @@ if file:
     img = np.array(img)/255.0
     img = np.expand_dims(img,0)
 
-    # Example prediction (replace with real model)
+    # Replace with your real model prediction
     prediction = np.random.rand(3)
 
     index = prediction.argmax()
     disease = classes[index]
 
-    st.subheader("🧠 AI Result")
+    st.subheader("🧠 AI Diagnosis")
 
     if disease == "Normal":
 
-        st.success("No lung disease detected ✅")
+        st.success("No lung disease detected")
 
     else:
 
         st.error(f"Disease detected: {disease}")
 
-        st.subheader("⚕ Recommended Medical Help")
+        st.write("⚕ Please consult a pulmonologist immediately.")
 
-        st.write("Consult a **Pulmonologist (lung specialist)** immediately.")
+        st.subheader("📍 Finding Hospitals Near You")
 
-        st.subheader("📍 Find Nearby Hospitals")
-
-        st.markdown("""
-        <script>
-        navigator.geolocation.getCurrentPosition(function(position) {
-
-            var lat = position.coords.latitude;
-            var lon = position.coords.longitude;
-
-            var map_url = "https://www.google.com/maps?q=hospitals&near=" + lat + "," + lon;
-
-            window.open(map_url);
-
-        });
-        </script>
-        """, unsafe_allow_html=True)
-
-        st.info("Click the button below to find nearby hospitals.")
+        st.info("Click the button to detect your live location and open nearby hospitals.")
 
         if st.button("Find Hospitals Near Me"):
 
@@ -67,25 +50,12 @@ if file:
                 var lat = position.coords.latitude;
                 var lon = position.coords.longitude;
 
-                var map_url = "https://www.google.com/maps?q=hospitals&near=" + lat + "," + lon;
+                var maps_url =
+                "https://www.google.com/maps/search/hospitals/@"
+                + lat + "," + lon + ",14z";
 
-                window.open(map_url);
+                window.open(maps_url);
 
             });
             </script>
             """, unsafe_allow_html=True)
-
-        st.subheader("👨‍⚕ Suggested Doctors")
-
-        st.write("""
-        **Pulmonology Specialists**
-
-        • Apollo Hospitals  
-        https://www.apollohospitals.com/
-
-        • Fortis Healthcare  
-        https://www.fortishealthcare.com/
-
-        • AIIMS Hospital  
-        https://www.aiims.edu/
-        """)
