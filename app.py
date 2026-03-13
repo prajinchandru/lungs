@@ -19,7 +19,7 @@ if file:
     img = np.array(img)/255.0
     img = np.expand_dims(img,0)
 
-    # Example AI prediction
+    # Example prediction
     prediction = np.random.rand(3)
     index = prediction.argmax()
     disease = classes[index]
@@ -33,74 +33,38 @@ if file:
     else:
 
         st.error(f"Disease detected: {disease}")
-        st.write("⚕ Please consult a **Pulmonologist** immediately.")
 
-        st.subheader("📍 Nearby Lung Specialists")
+        st.write("⚕ Please consult a pulmonologist immediately.")
+
+        st.subheader("📍 Nearby Hospitals")
 
         st.components.v1.html("""
-        <div id="results"></div>
+        <button onclick="getLocation()">Find Hospitals Near Me</button>
+
+        <div id="map"></div>
 
         <script>
+        function getLocation() {
 
-        function getDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = (lat2-lat1) * Math.PI/180;
-            const dLon = (lon2-lon1) * Math.PI/180;
+            navigator.geolocation.getCurrentPosition(function(position) {
 
-            const a =
-                Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1*Math.PI/180) *
-                Math.cos(lat2*Math.PI/180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
+                var lat = position.coords.latitude;
+                var lon = position.coords.longitude;
 
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
+                var iframe = document.createElement("iframe");
 
-        navigator.geolocation.getCurrentPosition(function(position){
+                iframe.width="100%";
+                iframe.height="600";
+                iframe.style.border="0";
 
-            var lat = position.coords.latitude;
-            var lon = position.coords.longitude;
+                iframe.src =
+                "https://maps.google.com/maps?q=hospitals%20near%20"
+                + lat + "," + lon + "&output=embed";
 
-            var service = new google.maps.places.PlacesService(document.createElement('div'));
-
-            service.nearbySearch({
-                location: {lat: lat, lng: lon},
-                radius: 5000,
-                keyword: "pulmonologist hospital"
-            }, function(results, status){
-
-                if(status === google.maps.places.PlacesServiceStatus.OK){
-
-                    var html = "";
-
-                    for(var i=0;i<results.length;i++){
-
-                        var place = results[i];
-
-                        var dist = getDistance(
-                            lat,
-                            lon,
-                            place.geometry.location.lat(),
-                            place.geometry.location.lng()
-                        ).toFixed(2);
-
-                        html += "<b>"+place.name+"</b><br>";
-                        html += "⭐ Rating: "+place.rating+"<br>";
-                        html += "📍 Distance: "+dist+" km<br><br>";
-
-                    }
-
-                    document.getElementById("results").innerHTML = html;
-
-                }
+                document.getElementById("map").appendChild(iframe);
 
             });
 
-        });
-
+        }
         </script>
-
-        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCbxuqZwVoUx7ItP-HsPY-bXvk8V3Q7ZGE&libraries=places"></script>
-
-        """, height=500)
+        """, height=650)
