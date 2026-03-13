@@ -1,47 +1,83 @@
 import streamlit as st
-import numpy as np
 from PIL import Image
-import gdown
-import os
+import numpy as np
 
-st.set_page_config(page_title="Lung Disease Detection AI", page_icon="🫁")
+st.set_page_config(page_title="Lung Disease AI Assistant", layout="wide")
 
-# Google Drive model
-FILE_ID = "1seN9vA_582rjB06bCwRSaianans9oM6g"
-MODEL_PATH = "lungs_disease_classifier.tflite"
+st.title("🫁 Lung Disease Detection & Medical Assistant")
 
-if not os.path.exists(MODEL_PATH):
-    url = f"https://drive.google.com/uc?id={FILE_ID}"
-    gdown.download(url, MODEL_PATH, quiet=False)
+st.write("Upload a Chest X-ray image to analyze lung condition and get medical help.")
 
-st.title("🫁 Lung Disease Detection AI")
-st.write("Upload a chest X-ray image")
+# -----------------------------
+# File Upload
+# -----------------------------
 
-file = st.file_uploader("Upload X-ray", type=["jpg","jpeg","png"])
+file = st.file_uploader("Upload Chest X-ray", type=["jpg","jpeg","png"])
 
-classes = [
-    "Normal",
-    "Pneumonia",
-    "Other Lung Disease"
-]
+classes = ["Normal", "Pneumonia", "Other Lung Disease"]
 
 if file:
 
     image = Image.open(file).convert("RGB")
-    st.image(image, caption="Uploaded X-ray")
+    st.image(image, caption="Uploaded X-ray", width=300)
 
-    img = image.resize((150,150))
-    img = np.array(img)/255.0
-    img = np.expand_dims(img,0)
+    # Dummy prediction (replace with real model later)
+    prediction = np.random.rand(3)
 
-    if st.button("Analyze"):
+    index = prediction.argmax()
+    confidence = float(prediction[index])
 
-        # Dummy prediction simulation
-        # (Replace with real model inference later)
+    disease = classes[index]
 
-        prediction = np.random.rand(3)
-        index = prediction.argmax()
-        confidence = float(prediction[index])
+    st.subheader("🧠 AI Prediction")
 
-        st.success(f"Prediction: {classes[index]}")
-        st.write(f"Confidence: {confidence:.2f}")
+    st.success(f"Prediction: {disease}")
+    st.write(f"Confidence: {confidence:.2f}")
+
+    # -----------------------------
+    # Medicine Suggestion
+    # -----------------------------
+
+    st.subheader("💊 Medicine Suggestion")
+
+    if disease == "Normal":
+        st.info("No medicine needed. Maintain healthy lifestyle.")
+
+    elif disease == "Pneumonia":
+        st.write("""
+        Suggested medicines (consult doctor before use):
+
+        • Azithromycin  
+        • Amoxicillin  
+        • Doxycycline  
+        • Paracetamol for fever
+        """)
+
+    else:
+        st.write("""
+        Suggested medicines (consult doctor):
+
+        • Corticosteroids  
+        • Bronchodilators  
+        • Antibiotics if infection present
+        """)
+
+# -----------------------------
+# Google Maps Section
+# -----------------------------
+
+st.subheader("🏥 Find Nearby Hospitals")
+
+api_key = st.text_input("Enter Google Maps API Key", type="password")
+
+if api_key:
+
+    location = st.text_input("Enter your city", "Chennai")
+    zoom = 12
+
+    map_url = f"https://www.google.com/maps/embed/v1/search?key={api_key}&q=hospitals+near+{location}&zoom={zoom}"
+
+    st.components.v1.iframe(map_url, height=600)
+
+else:
+    st.warning("Enter Google Maps API key to show hospitals.")
