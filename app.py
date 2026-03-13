@@ -3,35 +3,46 @@ import numpy as np
 from PIL import Image
 import gdown
 import os
-from keras.models import load_model
+import tflite_runtime.interpreter as tflite
 
-st.set_page_config(page_title="Lung Disease Detection", page_icon="🫁")
+st.set_page_config(page_title="Lung Disease Detection AI", page_icon="🫁")
 
-FILE_ID = "1yL5KwOn8RTHq5ANhK6qSf_93ccxyGQeY"
-MODEL_PATH = "model.h5"
+FILE_ID = "1seN9vA_582rjB06bCwRSaianans9oM6g"
+MODEL_PATH = "model.tflite"
 
 if not os.path.exists(MODEL_PATH):
     url = f"https://drive.google.com/uc?id={FILE_ID}"
     gdown.download(url, MODEL_PATH, quiet=False)
 
-model = load_model(MODEL_PATH)
+interpreter = tflite.Interpreter(model_path=MODEL_PATH)
+interpreter.allocate_tensors()
+
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
+classes = ["Normal", "Pneumonia", "Other Lung Disease"]
 
 st.title("🫁 Lung Disease Detection AI")
+st.write("Upload a chest X-ray image")
 
-file = st.file_uploader("Upload Chest X-ray", type=["jpg","jpeg","png"])
+file = st.file_uploader("Upload X-ray", type=["jpg","jpeg","png"])
 
-classes = ["Normal","Pneumonia","Other Lung Disease"]
+if file:
 
-if file is not None:
-    img = Image.open(file).convert("RGB")
-    st.image(img)
+    image = Image.open(file).convert("RGB")
+    st.image(image, caption="Uploaded X-ray")
 
-    img = img.resize((150,150))
+    img = image.resize((150,150))
     img = np.array(img)/255.0
-    img = np.expand_dims(img,0)
+    img = np.expand_dims(img,0).astype(np.float32)
 
     if st.button("Analyze"):
-        pred = model.predict(img)
+
+        interpreter.set_tensor(input_details[0]['index'], img)
+        interpreter.invoke()
+
+        pred = interpreter.get_tensor(output_details[0]['index'])
+
         index = pred.argmax()
         confidence = float(pred[0][index])
 
